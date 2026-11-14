@@ -2,7 +2,7 @@
 
 A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and Gemini (with optional OpenAI Responses support). One screen, one processing endpoint. No database, accounts, payments, or browser storage.
 
-The full-height editor uses locally bundled IBM Plex Sans, compact tool controls, and aligned source/result panes. On phones, switch between Original and Result. Task source quotes can be located and highlighted in the original document. See [DESIGN.md](DESIGN.md) for the design decisions and before/after review evidence.
+The writing-room interface pairs locally bundled Instrument Sans and Instrument Serif with a centered document spread. Focus view expands the editing area; clipboard paste and plain-text download are built in. On phones, switch between Original and Result. Task source quotes can be located and highlighted in the original. See [DESIGN.md](DESIGN.md) for design decisions and review evidence.
 
 ## Run locally
 
@@ -15,7 +15,7 @@ npm run dev
 
 Open **http://127.0.0.1:5173**. Express runs on port 3001; Vite proxies `/api` to it. Both start together. Stop them with Ctrl+C. No `.env` or API key is needed for the default demo.
 
-Choose a tool → **Try a sample** → run the tool. Ctrl+Enter (or Cmd+Enter) also submits from the editor. Results can be copied; tasks can be checked off for the current session.
+Choose a tool → **Try a sample** → run the tool. Ctrl+Enter (or Cmd+Enter) also submits from the editor. Results can be copied or downloaded as text; tasks can be checked off for the current session. Use Focus view to hide the workspace heading and gain reading space.
 
 ## Enable Gemini
 

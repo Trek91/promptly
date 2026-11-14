@@ -32,11 +32,39 @@ with sync_playwright() as p:
     page.on('console', lambda msg: console_errors.append(msg.text) if msg.type == 'error' else None)
     page.goto(BASE_URL)
     page.wait_for_load_state('networkidle')
-    expect(page.get_by_role('heading', name='Text workspace')).to_be_visible()
+    expect(page.get_by_role('heading', name='The writing room.')).to_be_visible()
     expect(page.get_by_role('button', name='Summarize text', exact=True)).to_be_disabled()
     expect(page.locator('#input-count')).to_have_text('0 words')
     page.screenshot(path=str(OUT / 'desktop-empty.png'), full_page=True)
     passed('initial empty state, word count, and disabled submit')
+
+    source = page.get_by_role('textbox', name='Original text')
+    source.fill('A focused writing session keeps this draft intact.')
+    original_height = page.locator('.editor-body').bounding_box()['height']
+    page.get_by_role('button', name='Enter focus view', exact=True).click()
+    expect(page.get_by_role('heading', name='The writing room.')).not_to_be_visible()
+    expect(page.get_by_role('heading', name='Text workspace', exact=True)).to_be_visible()
+    assert page.locator('.editor-body').bounding_box()['height'] > original_height + 80
+    expect(source).to_have_value('A focused writing session keeps this draft intact.')
+    page.get_by_role('button', name='Exit focus view', exact=True).click()
+    expect(page.get_by_role('heading', name='The writing room.')).to_be_visible()
+    page.get_by_role('button', name='Clear text', exact=True).click()
+    passed('Focus view expands writing space and preserves the draft')
+
+    page.evaluate('navigator.clipboard.writeText("Paste this draft directly from the clipboard.")')
+    page.get_by_role('button', name='Paste from clipboard', exact=True).click()
+    expect(source).to_have_value('Paste this draft directly from the clipboard.')
+    expect(source).to_be_focused()
+    page.evaluate('navigator.clipboard.writeText("")')
+    page.get_by_role('button', name='Paste from clipboard', exact=True).click()
+    expect(page.locator('.paste-notice')).to_contain_text('clipboard has no text')
+    expect(source).to_have_value('Paste this draft directly from the clipboard.')
+    page.evaluate('window.originalClipboardRead = navigator.clipboard.readText.bind(navigator.clipboard); Object.defineProperty(navigator.clipboard, "readText", { configurable: true, value: async () => { throw new DOMException("Denied", "NotAllowedError"); } });')
+    page.get_by_role('button', name='Paste from clipboard', exact=True).click()
+    expect(page.locator('.paste-notice')).to_contain_text('Ctrl+V')
+    page.evaluate('Object.defineProperty(navigator.clipboard, "readText", { configurable: true, value: window.originalClipboardRead });')
+    page.get_by_role('button', name='Clear text', exact=True).click()
+    passed('clipboard paste, empty clipboard, and permission-denied fallback')
 
     page.get_by_role('button', name='Quick guide').click()
     expect(page.get_by_role('dialog')).to_be_visible()
@@ -64,6 +92,14 @@ with sync_playwright() as p:
     expect(page.get_by_role('button', name='Copied!', exact=True)).to_be_visible()
     copied = page.evaluate('navigator.clipboard.readText()')
     assert '18%' in copied and 'Takeaway' in copied
+    with page.expect_download() as pending_download:
+        page.get_by_role('button', name='Download output', exact=True).click()
+    download = pending_download.value
+    assert download.suggested_filename == 'promptly-summarize.txt'
+    downloaded_text = Path(download.path()).read_text(encoding='utf-8')
+    assert '18%' in downloaded_text and 'Takeaway' in downloaded_text
+    expect(page.get_by_role('status').filter(has_text='Download started')).to_be_visible()
+    passed('plain-text download contains the structured result')
     page.screenshot(path=str(OUT / 'desktop-summary.png'), full_page=True)
     concise = page.locator('.summary-text').inner_text()
     page.get_by_role('button', name='detailed', exact=True).click()

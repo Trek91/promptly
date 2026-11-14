@@ -41,3 +41,14 @@ export async function copyText(text) {
   field.remove();
   if (!copied) throw new Error('Copy is unavailable in this browser. Select the result text to copy it.');
 }
+
+export function downloadText(text, filename) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

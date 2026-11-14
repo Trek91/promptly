@@ -7,7 +7,7 @@ export const tools = {
 };
 
 export default function ModeSelector({ mode, onChange }) {
-  return <div className="tool-selector" role="group" aria-label="Choose a tool">{Object.entries(tools).map(([key, tool]) => {
+  return <div className={`tool-selector selector-${mode}`} role="group" aria-label="Choose a tool"><span className="tool-indicator" aria-hidden="true" />{Object.entries(tools).map(([key, tool]) => {
     const Icon = tool.icon;
     return <button type="button" className={`tool-option ${key === mode ? 'is-selected' : ''}`} key={key} aria-label={`${tool.title} tool`} aria-pressed={key === mode} onClick={() => onChange(key)}>
       <Icon size={16} strokeWidth={1.7} aria-hidden="true" />

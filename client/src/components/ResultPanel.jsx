@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Copy, Check, AlertCircle, RotateCw, FileText, ChevronRight, LoaderCircle } from 'lucide-react';
+import { Copy, Check, AlertCircle, RotateCw, ArrowRight, ChevronRight, LoaderCircle, Download } from 'lucide-react';
 import { Button } from './ui.jsx';
 import { tools } from './ModeSelector.jsx';
-import { copyText, formatResult } from '../lib/api.js';
+import { copyText, formatResult, downloadText } from '../lib/api.js';
 import { countWords } from '../../../shared/schemas.js';
 
 const outlines = {
@@ -13,7 +13,7 @@ const outlines = {
 
 function EmptyResult({ mode }) {
   return <div className="empty-state">
-    <FileText size={24} strokeWidth={1.4} aria-hidden="true" />
+    <div className="empty-flow"><span>Original</span><ArrowRight size={14} aria-hidden="true" /><span>{tools[mode].resultTitle}</span></div>
     <h3>{tools[mode].empty}</h3>
     <p>{tools[mode].help}</p>
     <dl className="output-outline">{outlines[mode].map(([label, description]) => <div key={label}><dt>{label}</dt><dd>{description}</dd></div>)}</dl>
@@ -32,11 +32,12 @@ function LoadingResult({ mode, onCancel }) {
 export default function ResultPanel({ data, loading, error, mode, active, sourceText, onLocateSource, onRetry, onCancel }) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
+  const [downloaded, setDownloaded] = useState(false);
   const [completed, setCompleted] = useState({});
   const timer = useRef();
   const heading = useRef();
   useEffect(() => {
-    setCopied(false); setCopyError(''); setCompleted({});
+    setCopied(false); setCopyError(''); setCompleted({}); setDownloaded(false);
     if (data) heading.current?.focus({ preventScroll: true });
     return () => clearTimeout(timer.current);
   }, [data]);
@@ -44,14 +45,25 @@ export default function ResultPanel({ data, loading, error, mode, active, source
     try {
       await copyText(formatResult(data, completed));
       setCopied(true); setCopyError('');
+      setDownloaded(false);
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), 2200);
     } catch (e) { setCopyError(e.message); }
   }
+  function download() {
+    try {
+      downloadText(formatResult(data, completed), `promptly-${data.mode === 'actions' ? 'action-items' : data.mode}.txt`);
+      setDownloaded(true); setCopied(false); setCopyError('');
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setDownloaded(false), 2200);
+    } catch {
+      setCopyError('Download unavailable. Copy the output instead.');
+    }
+  }
   const done = Object.values(completed).filter(Boolean).length;
   return <section id="result-pane" className={`result-pane ${active ? 'is-mobile-visible' : ''}`} aria-labelledby="result-title" aria-busy={loading}>
     <div className="pane-header"><h2 id="result-title" ref={heading} tabIndex={-1}>{tools[mode].resultTitle}</h2>
-      {data ? <Button variant="ghost" onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied!' : 'Copy output'}</Button> : <span className="result-label">Output</span>}
+      {data ? <div className="result-actions"><Button variant="ghost" onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied!' : 'Copy output'}</Button><Button variant="ghost" className="icon-button" onClick={download} aria-label="Download output" title="Download as text"><Download size={15} aria-hidden="true" /></Button></div> : <span className="result-label">Output</span>}
     </div>
     <div className="result-body" tabIndex={0} aria-label={`${tools[mode].resultTitle} output`}>
       {loading ? <LoadingResult mode={mode} onCancel={onCancel} />
@@ -69,6 +81,6 @@ export default function ResultPanel({ data, loading, error, mode, active, source
               </article>)}</div></>}
             </div>}
     </div>
-    <div className="result-footer"><span>{data ? `${countWords(formatResult(data)).toLocaleString()} words in output` : loading ? 'Processing your source text' : error ? 'Your source text is unchanged' : 'Results appear here'}</span><span className={`copy-feedback ${copyError ? 'copy-error' : ''}`} role="status">{copyError || (copied ? 'Copied to clipboard' : '')}</span></div>
+    <div className="result-footer"><span>{data ? `${countWords(formatResult(data)).toLocaleString()} words in output` : loading ? 'Processing your source text' : error ? 'Your source text is unchanged' : 'Results appear here'}</span><span className={`copy-feedback ${copyError ? 'copy-error' : ''}`} role="status">{copyError || (copied ? 'Copied to clipboard' : downloaded ? 'Download started' : '')}</span></div>
   </section>;
 }

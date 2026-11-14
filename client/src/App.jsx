@@ -19,6 +19,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [mobilePane, setMobilePane] = useState('original');
   const [sourceQuote, setSourceQuote] = useState(null);
+  const [focusMode, setFocusMode] = useState(false);
   const active = useRef(null);
   const version = useRef(0);
 
@@ -59,14 +60,14 @@ export default function App() {
       if (version.current === current) { setLoading(false); active.current = null; }
     }
   }
-  return <div className="app-shell">
+  return <div className={`app-shell ${focusMode ? 'focus-mode' : ''}`}>
     <a className="skip-link" href="#source-text" onClick={(event) => { event.preventDefault(); setMobilePane('original'); setSourceQuote(null); requestAnimationFrame(() => document.getElementById('source-text')?.focus()); }}>Skip to editor</a>
-    <Header />
+    <Header focusMode={focusMode} onToggleFocus={() => setFocusMode((value) => !value)} />
     <main id="main-content" className="workspace-sheet">
-      <div className="workspace-heading">
-        <div><h1>Text workspace</h1><p>Summarize, rewrite, or extract next steps from your text.</p></div>
+      {!focusMode && <div className="workspace-heading">
+        <div><h1>The writing room.</h1><p>Your source, with a clearer next step.</p></div>
         <span className={`workspace-state ${error ? 'state-error' : data ? 'state-complete' : ''}`} role="status"><span />{loading ? 'Processing' : error ? 'Needs attention' : data ? 'Result ready' : text ? 'Draft' : 'Ready'}</span>
-      </div>
+      </div>}
       <div className="workbench-toolbar">
         <ModeSelector mode={mode} onChange={changeMode} />
         <div className="tool-preferences"><span className="settings-label">{mode === 'summarize' ? 'Length' : mode === 'rewrite' ? 'Tone' : 'Extract'}</span>

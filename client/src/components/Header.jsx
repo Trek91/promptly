@@ -1,13 +1,13 @@
-import { CircleHelp, X, LockKeyhole, ChevronRight } from 'lucide-react';
+import { CircleHelp, X, LockKeyhole, Minimize2, Maximize2 } from 'lucide-react';
 import { useRef } from 'react';
 import { Button } from './ui.jsx';
 
-export default function Header() {
+export default function Header({ focusMode, onToggleFocus }) {
   const dialog = useRef(null);
   return <>
     <header className="site-header">
-      <div className="header-location"><a className="brand" href="/" aria-label="Promptly home"><svg className="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 5 7 7-7 7M13 19h7" stroke="currentColor" strokeWidth="2.3" strokeLinecap="square" /></svg>Promptly</a><ChevronRight size={13} aria-hidden="true" /><span className="workspace-label">Workspace</span></div>
-      <div className="header-utilities"><span className="session-label">Session only</span><Button variant="ghost" onClick={() => dialog.current.showModal()}><CircleHelp size={16} aria-hidden="true" /><span>Quick guide</span></Button></div>
+      <div className="header-location"><a className="brand" href="/" aria-label="Promptly home"><svg className="brand-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M7 23V6h7a6 6 0 0 1 0 12h-3M12 11h3M19 22h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>promptly<span className="brand-stop">.</span></a>{focusMode ? <h1 className="focus-title">Text workspace</h1> : <span className="workspace-label">A space to write</span>}</div>
+      <div className="header-utilities"><Button variant="ghost" className="focus-toggle" aria-label={focusMode ? 'Exit focus view' : 'Enter focus view'} aria-pressed={focusMode} onClick={onToggleFocus}>{focusMode ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}<span>{focusMode ? 'Exit focus' : 'Focus view'}</span></Button><Button variant="ghost" aria-label="Quick guide" onClick={() => dialog.current.showModal()}><CircleHelp size={16} aria-hidden="true" /><span>Quick guide</span></Button></div>
     </header>
     <dialog ref={dialog} className="help-dialog" aria-labelledby="guide-title" onClick={(e) => { if (e.target === dialog.current) dialog.current.close(); }}>
       <div className="dialog-top"><span>Using Promptly</span><Button variant="ghost" className="icon-button" aria-label="Close guide" onClick={() => dialog.current.close()} autoFocus><X size={18} aria-hidden="true" /></Button></div>
