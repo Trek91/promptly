@@ -29,7 +29,7 @@ function LoadingResult({ mode, onCancel }) {
   </div>;
 }
 
-export default function ResultPanel({ data, loading, error, mode, onRetry, onCancel }) {
+export default function ResultPanel({ data, loading, error, mode, active, sourceText, onLocateSource, onRetry, onCancel }) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
   const [completed, setCompleted] = useState({});
@@ -49,7 +49,7 @@ export default function ResultPanel({ data, loading, error, mode, onRetry, onCan
     } catch (e) { setCopyError(e.message); }
   }
   const done = Object.values(completed).filter(Boolean).length;
-  return <section className="result-pane" aria-labelledby="result-title" aria-busy={loading}>
+  return <section id="result-pane" className={`result-pane ${active ? 'is-mobile-visible' : ''}`} aria-labelledby="result-title" aria-busy={loading}>
     <div className="pane-header"><h2 id="result-title" ref={heading} tabIndex={-1}>{tools[mode].resultTitle}</h2>
       {data ? <Button variant="ghost" onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied!' : 'Copy output'}</Button> : <span className="result-label">Output</span>}
     </div>
@@ -65,10 +65,10 @@ export default function ResultPanel({ data, loading, error, mode, onRetry, onCan
               {data.mode === 'actions' && <><div className="task-list-heading"><h3>{data.result.actionItems.length ? `${data.result.actionItems.length} action ${data.result.actionItems.length === 1 ? 'item' : 'items'}` : 'No action items found'}</h3>{data.result.actionItems.length > 0 && <span className="task-progress">{done} of {data.result.actionItems.length} complete</span>}</div><p className="action-overview">{data.result.overview}</p><div className="task-list">{data.result.actionItems.map((item, i) => <article className={`task ${completed[i] ? 'task-done' : ''}`} key={i}>
                 <label className="task-heading"><input type="checkbox" checked={!!completed[i]} onChange={(e) => setCompleted((old) => ({ ...old, [i]: e.target.checked }))} /><strong>{item.task}</strong></label>
                 <div className="task-meta"><span><span className="field-label">Owner</span><span>{item.assignee || 'Unassigned'}</span></span><span><span className="field-label">Due</span><span>{item.dueDate || 'No deadline'}</span></span>{item.priority !== 'unspecified' && <span className={`priority priority-${item.priority}`}>{item.priority} priority</span>}</div>
-                <details><summary><ChevronRight size={13} aria-hidden="true" />View source</summary><blockquote>{item.evidence}</blockquote></details>
+                <details><summary><ChevronRight size={13} aria-hidden="true" />View source</summary><blockquote>{item.evidence}</blockquote><Button variant="ghost" className="locate-source" onClick={() => onLocateSource(item.evidence)} disabled={!item.evidence.trim() || !sourceText.includes(item.evidence)}>{item.evidence.trim() && sourceText.includes(item.evidence) ? 'Find in original' : 'Quote not found in original'}</Button></details>
               </article>)}</div></>}
             </div>}
     </div>
-    <div className="result-footer"><span>{data ? `${countWords(formatResult(data)).toLocaleString()} words in output` : loading ? 'Processing your source text' : error ? 'Your source text is unchanged' : 'Results appear here'}</span><span className="copy-feedback" role="status">{copyError || (copied ? 'Copied to clipboard' : '')}</span></div>
+    <div className="result-footer"><span>{data ? `${countWords(formatResult(data)).toLocaleString()} words in output` : loading ? 'Processing your source text' : error ? 'Your source text is unchanged' : 'Results appear here'}</span><span className={`copy-feedback ${copyError ? 'copy-error' : ''}`} role="status">{copyError || (copied ? 'Copied to clipboard' : '')}</span></div>
   </section>;
 }

@@ -150,6 +150,8 @@ with sync_playwright() as p:
 
     for width in [320, 390, 768, 1024, 1440]:
         page.set_viewport_size({'width': width, 'height': 900})
+        if page.get_by_role('button', name='Show original text', exact=True).is_visible():
+            page.get_by_role('button', name='Show original text', exact=True).click()
         assert not page.evaluate('document.documentElement.scrollWidth > innerWidth'), f'overflow at {width}'
         expect(page.get_by_role('button', name='Rewrite text', exact=True)).to_be_visible()
         if width == 390:
@@ -185,6 +187,37 @@ with sync_playwright() as p:
     expect(page.get_by_text('No deadline', exact=True)).to_be_visible()
     assert not errors, f'Uncaught browser errors: {errors}'
     passed('Gemini provider contract, result label, and structured task rendering (mocked transport)')
+
+    # Locate exact evidence in a long source, then return to editing without losing output.
+    long_source = ('Background context for the launch.\n' * 55) + 'Maya will review the copy.'
+    source.fill(long_source)
+    page.route('**/api/process', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(gemini_result)), times=1)
+    page.get_by_role('button', name='Extract tasks', exact=True).click()
+    expect(page.get_by_text('Gemini result', exact=True)).to_be_visible()
+    page.locator('.task summary').first.click()
+    page.get_by_role('button', name='Find in original', exact=True).click()
+    expect(page.get_by_role('region', name='Highlighted original text')).to_be_focused()
+    expect(page.locator('.source-reader mark')).to_have_text('Maya will review the copy.')
+    assert page.locator('.source-reader').evaluate('(element) => element.scrollTop > 0')
+    expect(page.get_by_text('Gemini result', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Edit text', exact=True).click()
+    expect(source).to_have_value(long_source)
+    expect(source).to_be_focused()
+    page.set_viewport_size({'width':390,'height':844})
+    page.get_by_role('button', name='Show result', exact=True).click()
+    expect(page.get_by_text('Gemini result', exact=True)).to_be_visible()
+    expect(source).not_to_be_visible()
+    page.get_by_role('button', name='Find in original', exact=True).click()
+    expect(page.get_by_role('button', name='Show original text', exact=True)).to_have_attribute('aria-pressed','true')
+    expect(page.locator('.source-reader mark')).to_be_visible()
+    expect(page.get_by_text('Gemini result', exact=True)).not_to_be_visible()
+    page.screenshot(path=str(OUT / 'mobile-source-review.png'), full_page=True)
+    page.get_by_role('button', name='Edit text', exact=True).click()
+    source.fill('A changed draft invalidates the older result.')
+    page.get_by_role('button', name='Show result', exact=True).click()
+    expect(page.get_by_role('heading', name='No tasks yet')).to_be_visible()
+    assert not page.evaluate('document.documentElement.scrollWidth > innerWidth')
+    passed('exact source highlighting, scroll/focus restoration, mobile view switching, and edit invalidation')
     browser.close()
 
 (OUT / 'ui-report.json').write_text(json.dumps({'baseUrl': BASE_URL, 'passed': len(checks), 'checks': checks}, indent=2), encoding='utf-8')

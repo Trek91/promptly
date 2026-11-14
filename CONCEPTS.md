@@ -16,7 +16,7 @@ This repository implements the focused Promptly scope agreed in the referenced d
 | JavaScript async/await | `App.jsx`, `server/app.js`, `server/services/gemini.js`, `server/services/openai.js` | Trace promise completion and exception handling from browser fetch through the selected provider. |
 | React component composition | `client/src/components/` + `App.jsx` | Header, tool selector, editor, result panel, reusable Button and Choice compose one screen. |
 | `useState` | `App.jsx`, `ResultPanel.jsx` | Editor text, selected mode, preferences, loading/error/result, clipboard feedback, and checked tasks update the rendered screen. |
-| `useEffect` | `App.jsx` and `ResultPanel.jsx` | Cleanup aborts on unmount; result changes reset copy/task state and focus the result heading; timers are cleaned up. No autosave is needed. |
+| `useEffect` | `App.jsx`, `TextEditor.jsx`, and `ResultPanel.jsx` | Cleanup aborts on unmount; result changes reset copy/task state; source review scrolls/focuses the exact quote and restores editing focus; timers are cleaned up. No autosave is needed. |
 | Git workflow | `.gitignore`, repository history, commands below | Inspect the initial snapshot, branch for a change, review the diff, and commit. No remote publishing is required. |
 | System integration / problem modeling | `README.md`, shared contracts, frontend → Express → selected engine | Explain source → validated request → prompt/schema → engine → validated response → purpose-built output. |
 

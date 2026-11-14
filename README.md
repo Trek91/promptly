@@ -2,7 +2,7 @@
 
 A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and Gemini (with optional OpenAI Responses support). One screen, one processing endpoint. No database, accounts, payments, or browser storage.
 
-The full-height editor uses locally bundled IBM Plex Sans, compact tool controls, and aligned source/result panes. On phones, the panes stack. See [DESIGN.md](DESIGN.md) for the design decisions and review evidence.
+The full-height editor uses locally bundled IBM Plex Sans, compact tool controls, and aligned source/result panes. On phones, switch between Original and Result. Task source quotes can be located and highlighted in the original document. See [DESIGN.md](DESIGN.md) for the design decisions and before/after review evidence.
 
 ## Run locally
 
@@ -90,7 +90,7 @@ npm run check
 
 This runs API/service tests and builds the frontend. Gemini's HTTP requests/responses and the OpenAI SDK transport are mocked in tests; tests do not make paid API calls.
 
-For browser checks, install Python 3.10+ and Playwright, start the app in another terminal, then run:
+For browser checks, install Python 3.10+ and Playwright, start the app **in demo mode** in another terminal, then run:
 
 ```sh
 python -m pip install playwright
