@@ -2,6 +2,8 @@
 
 A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and Gemini (with optional OpenAI Responses support). One screen, one processing endpoint. No database, accounts, payments, or browser storage.
 
+The full-height editor uses locally bundled IBM Plex Sans, compact tool controls, and aligned source/result panes. On phones, the panes stack. See [DESIGN.md](DESIGN.md) for the design decisions and review evidence.
+
 ## Run locally
 
 Install **Node.js 22.12+** (Node 24 LTS recommended). Open a terminal in this folder:

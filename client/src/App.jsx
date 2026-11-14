@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, LockKeyhole, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { LockKeyhole, ChevronDown } from 'lucide-react';
 import Header from './components/Header.jsx';
 import ModeSelector from './components/ModeSelector.jsx';
 import TextEditor from './components/TextEditor.jsx';
@@ -50,22 +50,23 @@ export default function App() {
     }
   }
   return <div className="app-shell">
+    <a className="skip-link" href="#source-text">Skip to editor</a>
     <Header />
-    <main id="main-content">
-      <div className="intro"><div><div className="intro-note"><span /><span>A little space for better thinking</span></div><h1>Make every word count.</h1><p>Less noise. More meaning. Turn your text into something useful.</p></div><div className="intro-aside"><span className="aside-symbol" aria-hidden="true">✳</span><p>Your thoughts.<br />A little more together.</p></div></div>
-      <ModeSelector mode={mode} onChange={changeMode} />
-      <div className="workbench">
-        <div className="workbench-toolbar"><div className="settings-label"><SlidersHorizontal size={15} /><span>{mode === 'summarize' ? 'Summary length' : mode === 'rewrite' ? 'Writing tone' : 'Task details'}</span></div>
-          {mode === 'summarize' ? <Choice label="Summary length" value={length} options={['concise', 'detailed']} onChange={(value) => { resetResult(); setLength(value); }} />
-            : mode === 'rewrite' ? <div className="tone-select"><label htmlFor="tone" className="sr-only">Writing tone</label><select id="tone" value={tone} onChange={(e) => { resetResult(); setTone(e.target.value); }}>{tones.map((value) => <option key={value} value={value}>{value[0].toUpperCase() + value.slice(1)}</option>)}</select></div>
-              : <span className="action-setting">Owners & deadlines, when provided</span>}
-          <span className="toolbar-tip"><Sparkles size={14} />A first draft, thoughtfully done</span>
-        </div>
-        <div className="panes"><TextEditor text={text} mode={mode} loading={loading} onChange={updateText} onSample={() => updateText(samples[mode])} onClear={() => updateText('')} onSubmit={run} /><ResultPanel data={data} loading={loading} error={error} mode={mode} onRetry={run} onCancel={resetResult} /></div>
+    <main id="main-content" className="workspace-sheet">
+      <div className="workspace-heading">
+        <div><h1>Text workspace</h1><p>Summarize, rewrite, or extract next steps from your text.</p></div>
+        <span className={`workspace-state ${error ? 'state-error' : ''}`}><span />{loading ? 'Processing' : error ? 'Needs attention' : data ? 'Result ready' : text ? 'Draft' : 'Ready'}</span>
       </div>
-      <div className="below-workbench"><span><LockKeyhole size={13} />No saved history. Just this session.</span><span className="keyboard-tip"><kbd>Ctrl</kbd><span>+</span><kbd>↵</kbd><span>to run your tool</span></span></div>
-      <section className="small-note" aria-label="Getting started"><div className="note-icon"><ArrowUpRight size={17} /></div><div><strong>A good place to start? Something you’ve already written.</strong><p>An email that needs a polish. Notes that need a next step. An article you’d like to get through.</p></div></section>
+      <div className="workbench-toolbar">
+        <ModeSelector mode={mode} onChange={changeMode} />
+        <div className="tool-preferences"><span className="settings-label">{mode === 'summarize' ? 'Length' : mode === 'rewrite' ? 'Tone' : 'Extract'}</span>
+          {mode === 'summarize' ? <Choice label="Summary length" value={length} options={['concise', 'detailed']} onChange={(value) => { resetResult(); setLength(value); }} />
+            : mode === 'rewrite' ? <div className="tone-select"><label htmlFor="tone" className="sr-only">Writing tone</label><select id="tone" value={tone} onChange={(e) => { resetResult(); setTone(e.target.value); }}>{tones.map((value) => <option key={value} value={value}>{value[0].toUpperCase() + value.slice(1)}</option>)}</select><ChevronDown size={14} aria-hidden="true" /></div>
+              : <span className="action-setting">Tasks, owners & deadlines</span>}
+        </div>
+      </div>
+      <div className="panes"><TextEditor text={text} mode={mode} loading={loading} onChange={updateText} onSample={() => updateText(samples[mode])} onClear={() => updateText('')} onSubmit={run} /><ResultPanel data={data} loading={loading} error={error} mode={mode} onRetry={run} onCancel={resetResult} /></div>
+      <footer className="workspace-footer"><span><LockKeyhole size={12} aria-hidden="true" />Text is not saved</span><span>Review AI results before sharing.</span></footer>
     </main>
-    <footer className="site-footer"><span>Small tools. Clearer thinking.</span><span>Made for the work between the words.<span className="footer-dot">✦</span></span></footer>
   </div>;
 }

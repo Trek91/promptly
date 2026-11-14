@@ -1,18 +1,17 @@
-import { AlignLeft, Feather, ListTodo, ArrowUpRight } from 'lucide-react';
+import { AlignLeft, PenLine, ListTodo } from 'lucide-react';
 
 export const tools = {
-  summarize: { title: 'Summarize', description: 'Find the heart of the text', icon: AlignLeft, action: 'Summarize text', hint: 'Articles, long notes, research…', empty: 'The big picture, in fewer words.', help: 'Your summary, key points, and takeaway will appear here.' },
-  rewrite: { title: 'Rewrite', description: 'Say it a little better', icon: Feather, action: 'Rewrite text', hint: 'Emails, rough drafts, messages…', empty: 'Same meaning. A fresh perspective.', help: 'Your rewritten text and a note on what changed will appear here.' },
-  actions: { title: 'Extract tasks', description: 'Turn words into next steps', icon: ListTodo, action: 'Extract tasks', hint: 'Meeting notes, project discussions…', empty: 'Find your next good move.', help: 'Your tasks, owners, and deadlines will appear here.' },
+  summarize: { title: 'Summarize', icon: AlignLeft, action: 'Summarize text', resultTitle: 'Summary', hint: 'An article, a research note, or a long document.', empty: 'No summary yet', help: 'Add your source text and run Summarize to get an overview, key points, and a takeaway.', loading: 'Creating your summary…' },
+  rewrite: { title: 'Rewrite', icon: PenLine, action: 'Rewrite text', resultTitle: 'Rewritten text', hint: 'An email, a message, or a draft you want to refine.', empty: 'No rewrite yet', help: 'Choose a tone and run Rewrite. The original meaning stays the starting point.', loading: 'Rewriting your text…' },
+  actions: { title: 'Extract tasks', icon: ListTodo, action: 'Extract tasks', resultTitle: 'Action items', hint: 'Meeting notes or a discussion with next steps.', empty: 'No tasks yet', help: 'Run Extract tasks to find next steps, with owners, deadlines, and source quotes.', loading: 'Finding action items…' },
 };
 
 export default function ModeSelector({ mode, onChange }) {
   return <div className="tool-selector" role="group" aria-label="Choose a tool">{Object.entries(tools).map(([key, tool]) => {
     const Icon = tool.icon;
     return <button type="button" className={`tool-option ${key === mode ? 'is-selected' : ''}`} key={key} aria-label={`${tool.title} tool`} aria-pressed={key === mode} onClick={() => onChange(key)}>
-      <span className="tool-icon"><Icon size={21} strokeWidth={1.7} /></span>
-      <span className="tool-copy"><strong>{tool.title}</strong><span>{tool.description}</span></span>
-      <ArrowUpRight size={17} className="tool-arrow" />
+      <Icon size={16} strokeWidth={1.7} aria-hidden="true" />
+      <span>{tool.title}</span>
     </button>;
   })}</div>;
 }

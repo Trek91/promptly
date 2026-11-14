@@ -1,9 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Copy, Check, AlertCircle, ArrowRight, UserRound, CalendarDays, Quote, CircleCheck, X } from 'lucide-react';
+import { Copy, Check, AlertCircle, RotateCw, FileText, ChevronRight, LoaderCircle } from 'lucide-react';
 import { Button } from './ui.jsx';
 import { tools } from './ModeSelector.jsx';
 import { copyText, formatResult } from '../lib/api.js';
 import { countWords } from '../../../shared/schemas.js';
+
+const outlines = {
+  summarize: [['Overview', 'A condensed version of the source.'], ['Key points', 'The details worth keeping.'], ['Takeaway', 'The main idea in one sentence.']],
+  rewrite: [['Rewritten text', 'A new draft in your selected tone.'], ['Edits made', 'A brief explanation of what changed.']],
+  actions: [['Tasks', 'Concrete requests and commitments.'], ['Owners & dates', 'Included when the source provides them.'], ['Source quotes', 'Evidence you can check for each task.']],
+};
+
+function EmptyResult({ mode }) {
+  return <div className="empty-state">
+    <FileText size={24} strokeWidth={1.4} aria-hidden="true" />
+    <h3>{tools[mode].empty}</h3>
+    <p>{tools[mode].help}</p>
+    <dl className="output-outline">{outlines[mode].map(([label, description]) => <div key={label}><dt>{label}</dt><dd>{description}</dd></div>)}</dl>
+  </div>;
+}
+
+function LoadingResult({ mode, onCancel }) {
+  return <div className="loading-state" role="status">
+    <div className="loading-label"><LoaderCircle size={16} className="spin" aria-hidden="true" /><span>{tools[mode].loading}</span><Button variant="ghost" onClick={onCancel}>Cancel</Button></div>
+    <div className={`skeleton-document skeleton-${mode}`} aria-hidden="true">
+      {[0, 1, 2].map((group) => <div className="skeleton-block" key={group}><i className="skeleton-heading" /><i /><i /><i className="skeleton-short" /></div>)}
+    </div>
+  </div>;
+}
 
 export default function ResultPanel({ data, loading, error, mode, onRetry, onCancel }) {
   const [copied, setCopied] = useState(false);
@@ -24,22 +48,27 @@ export default function ResultPanel({ data, loading, error, mode, onRetry, onCan
       timer.current = setTimeout(() => setCopied(false), 2200);
     } catch (e) { setCopyError(e.message); }
   }
+  const done = Object.values(completed).filter(Boolean).length;
   return <section className="result-pane" aria-labelledby="result-title" aria-busy={loading}>
-    <div className="pane-header"><h2 id="result-title" ref={heading} tabIndex={-1}><Sparkles size={17} />Your result</h2>
-      {data ? <Button variant="ghost" onClick={copy}><span className="copy-icon">{copied ? <Check size={15} /> : <Copy size={15} />}</span>{copied ? 'Copied!' : 'Copy output'}</Button> : <span className="result-label">A little more clarity</span>}
+    <div className="pane-header"><h2 id="result-title" ref={heading} tabIndex={-1}>{tools[mode].resultTitle}</h2>
+      {data ? <Button variant="ghost" onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied!' : 'Copy output'}</Button> : <span className="result-label">Output</span>}
     </div>
-    <div className={`result-body ${!data ? 'result-centered' : ''}`}>
-      {loading ? <div className="loading-state" role="status"><span className="empty-icon"><Sparkles size={26} /></span><h3>Making room for clarity…</h3><p>Giving your words a little attention.</p><div className="skeleton-lines" aria-hidden="true"><i /><i /><i /></div><Button variant="ghost" onClick={onCancel}><X size={14} />Cancel</Button></div>
-        : error ? <div className="error-state" role="alert"><span className="error-icon"><AlertCircle size={27} /></span><h3>Let’s try that again.</h3><p>{error.message}</p><Button variant="outline" onClick={onRetry}>Try again<ArrowRight size={15} /></Button>{error.requestId && <small className="request-id">Reference: {error.requestId}</small>}</div>
-          : !data ? <div className="empty-state"><div className="paper-art" aria-hidden="true"><div className="paper-back" /><div className="paper-front"><span /><span /><span /><span /></div><span className="paper-spark"><Sparkles size={23} strokeWidth={1.6} /></span></div><h3>{tools[mode].empty}</h3><p>{tools[mode].help}</p><span className="empty-nudge">Add your text to get started</span></div>
+    <div className="result-body" tabIndex={0} aria-label={`${tools[mode].resultTitle} output`}>
+      {loading ? <LoadingResult mode={mode} onCancel={onCancel} />
+        : error ? <div className="error-state" role="alert"><AlertCircle size={22} aria-hidden="true" /><h3>Couldn’t create the result</h3><p>{error.message}</p><Button variant="outline" onClick={onRetry}><RotateCw size={14} aria-hidden="true" />Try again</Button>{error.requestId && <small className="request-id">Reference: {error.requestId}</small>}</div>
+          : !data ? <EmptyResult mode={mode} />
             : <div className="result-content">
-              <div className="result-meta"><span className={`provider-pill ${data.meta.provider === 'demo' ? 'demo-pill' : ''}`}><span />{{ demo: 'Demo result', gemini: 'Gemini result', openai: 'OpenAI result' }[data.meta.provider]}</span><span>{(data.meta.durationMs / 1000).toFixed(1)}s</span></div>
-              {data.meta.provider === 'demo' && <p className="demo-note">Sample text uses curated results. Other text uses simple local rules, with limited accuracy.</p>}
-              {data.mode === 'summarize' && <><h3>In a nutshell</h3><p className="summary-text">{data.result.summary}</p><h4>Key points</h4><ul className="key-points">{data.result.keyPoints.map((point, i) => <li key={i}>{point}</li>)}</ul><div className="takeaway"><span><Sparkles size={14} />The takeaway</span><p>{data.result.takeaway}</p></div></>}
-              {data.mode === 'rewrite' && <><h3>A fresh take</h3><p className="rewritten-text">{data.result.rewrittenText}</p><div className="changes"><h4>A few thoughtful edits</h4><ul>{data.result.changes.map((change, i) => <li key={i}><Check size={14} />{change}</li>)}</ul></div></>}
-              {data.mode === 'actions' && <><h3>{data.result.actionItems.length ? 'Your next steps' : 'No action items found'}</h3><p className="action-overview">{data.result.overview}</p><div className="task-list">{data.result.actionItems.map((item, i) => <article className={`task ${completed[i] ? 'task-done' : ''}`} key={i}><label className="task-heading"><input type="checkbox" checked={!!completed[i]} onChange={(e) => setCompleted((old) => ({ ...old, [i]: e.target.checked }))} /><strong>{item.task}</strong></label><div className="task-meta"><span><UserRound size={12} />{item.assignee || 'Unassigned'}</span><span><CalendarDays size={12} />{item.dueDate || 'No deadline'}</span>{item.priority !== 'unspecified' && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}</div><details><summary><Quote size={12} />View source</summary><blockquote>{item.evidence}</blockquote></details></article>)}</div>{data.result.actionItems.length > 0 && <p className="task-progress"><CircleCheck size={14} />{Object.values(completed).filter(Boolean).length} of {data.result.actionItems.length} checked off in this session</p>}</>}
+              <div className="result-meta"><span className={`provider-pill ${data.meta.provider === 'demo' ? 'demo-pill' : ''}`}><span aria-hidden="true" />{{ demo: 'Demo result', gemini: 'Gemini result', openai: 'OpenAI result' }[data.meta.provider]}</span><span>{(data.meta.durationMs / 1000).toFixed(1)}s</span></div>
+              {data.meta.provider === 'demo' && <p className="demo-note">Sample text uses curated results. Other text uses local rules, with limited accuracy.</p>}
+              {data.mode === 'summarize' && <><h3>Overview</h3><p className="summary-text">{data.result.summary}</p><h3 className="section-heading">Key points</h3><ul className="key-points">{data.result.keyPoints.map((point, i) => <li key={i}>{point}</li>)}</ul><div className="takeaway"><h3>Takeaway</h3><p>{data.result.takeaway}</p></div></>}
+              {data.mode === 'rewrite' && <><h3 className="sr-only">Revised draft</h3><p className="rewritten-text">{data.result.rewrittenText}</p><div className="changes"><h3>Edits made</h3><ul>{data.result.changes.map((change, i) => <li key={i}><Check size={14} aria-hidden="true" />{change}</li>)}</ul></div></>}
+              {data.mode === 'actions' && <><div className="task-list-heading"><h3>{data.result.actionItems.length ? `${data.result.actionItems.length} action ${data.result.actionItems.length === 1 ? 'item' : 'items'}` : 'No action items found'}</h3>{data.result.actionItems.length > 0 && <span className="task-progress">{done} of {data.result.actionItems.length} complete</span>}</div><p className="action-overview">{data.result.overview}</p><div className="task-list">{data.result.actionItems.map((item, i) => <article className={`task ${completed[i] ? 'task-done' : ''}`} key={i}>
+                <label className="task-heading"><input type="checkbox" checked={!!completed[i]} onChange={(e) => setCompleted((old) => ({ ...old, [i]: e.target.checked }))} /><strong>{item.task}</strong></label>
+                <div className="task-meta"><span><span className="field-label">Owner</span><span>{item.assignee || 'Unassigned'}</span></span><span><span className="field-label">Due</span><span>{item.dueDate || 'No deadline'}</span></span>{item.priority !== 'unspecified' && <span className={`priority priority-${item.priority}`}>{item.priority} priority</span>}</div>
+                <details><summary><ChevronRight size={13} aria-hidden="true" />View source</summary><blockquote>{item.evidence}</blockquote></details>
+              </article>)}</div></>}
             </div>}
     </div>
-    <div className="result-footer"><span>{data ? `${countWords(formatResult(data)).toLocaleString()} words in output` : 'Thoughtfully structured. Ready to use.'}</span><span className="copy-feedback" role="status">{copyError || (copied ? 'Copied to clipboard' : data ? 'Review before sharing' : '')}</span></div>
+    <div className="result-footer"><span>{data ? `${countWords(formatResult(data)).toLocaleString()} words in output` : loading ? 'Processing your source text' : error ? 'Your source text is unchanged' : 'Results appear here'}</span><span className="copy-feedback" role="status">{copyError || (copied ? 'Copied to clipboard' : '')}</span></div>
   </section>;
 }
