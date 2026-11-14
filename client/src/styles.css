@@ -38,7 +38,8 @@ button:disabled { cursor: not-allowed; }
 button, a, select, textarea, input, summary { outline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--accent); }
 ::selection { background: #d8e8ed; color: var(--ink); }
-button, a { transition: background-color 120ms ease, border-color 120ms ease; }
+a { transition: color 120ms ease; }
+button { transition: none; }
 button svg { flex-shrink: 0; }
 h1, h2, h3, p { margin: 0; }
 .skip-link { position: fixed; z-index: 20; left: 16px; top: -60px; padding: 10px 16px; background: var(--ink); color: var(--surface); border-radius: var(--control-radius); }
