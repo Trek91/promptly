@@ -163,6 +163,28 @@ with sync_playwright() as p:
     assert page.evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches')
     assert not errors, f'Uncaught browser errors: {errors}'
     passed('reduced-motion preference and zero uncaught browser errors')
+
+    # Gemini's result envelope must pass the real browser-side Zod contract.
+    # This is a transport fixture, not a live Google request.
+    page.set_viewport_size({'width': 1440, 'height': 1080})
+    page.get_by_role('button', name='Extract tasks tool', exact=True).click()
+    source.fill('Maya will review the copy.')
+    gemini_result = {
+        'mode': 'actions',
+        'result': {'overview': 'One action item.', 'actionItems': [{
+            'task': 'Review the copy', 'assignee': 'Maya', 'dueDate': None,
+            'priority': 'unspecified', 'evidence': 'Maya will review the copy.'
+        }]},
+        'meta': {'provider': 'gemini', 'inputWords': 5, 'durationMs': 123, 'requestId': 'gemini-browser-check'}
+    }
+    page.route('**/api/process', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(gemini_result)), times=1)
+    page.get_by_role('button', name='Extract tasks', exact=True).click()
+    expect(page.get_by_text('Gemini result', exact=True)).to_be_visible()
+    expect(page.get_by_role('heading', name='Your next steps')).to_be_visible()
+    expect(page.locator('.demo-note')).to_have_count(0)
+    expect(page.get_by_text('No deadline', exact=True)).to_be_visible()
+    assert not errors, f'Uncaught browser errors: {errors}'
+    passed('Gemini provider contract, result label, and structured task rendering (mocked transport)')
     browser.close()
 
 (OUT / 'ui-report.json').write_text(json.dumps({'baseUrl': BASE_URL, 'passed': len(checks), 'checks': checks}, indent=2), encoding='utf-8')

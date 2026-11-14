@@ -1,6 +1,6 @@
 # Promptly v1.0
 
-A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and the OpenAI Responses API. One screen, one processing endpoint. No database, accounts, payments, or browser storage.
+A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and Gemini (with optional OpenAI Responses support). One screen, one processing endpoint. No database, accounts, payments, or browser storage.
 
 ## Run locally
 
@@ -15,25 +15,28 @@ Open **http://127.0.0.1:5173**. Express runs on port 3001; Vite proxies `/api` t
 
 Choose a tool → **Try a sample** → run the tool. Ctrl+Enter (or Cmd+Enter) also submits from the editor. Results can be copied; tasks can be checked off for the current session.
 
-## Enable real AI
+## Enable Gemini
 
-Copy `.env.example` to `.env` in the project root. On PowerShell:
+Create a key in [Google AI Studio](https://aistudio.google.com/apikey). Copy `.env.example` to `.env` in the project root if `.env` does not already exist. On PowerShell:
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 Edit these settings, then restart the server:
 
 ```dotenv
 DEMO_MODE=false
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-3.8-flash
 ```
 
-The model is configurable; choose one your API account can access that supports Responses structured outputs. The key is read **only by Express**. Never add a `VITE_` API key or commit `.env`. Vite exposes no server environment variables to the client in this project. Real mode fails at startup if the key is absent; it never silently substitutes demo output.
+Stop `npm run dev` with Ctrl+C and run it again after editing `.env`. A successful real request displays **Gemini result**, rather than **Demo result**. The model is configurable; choose a Gemini model your API account can access that supports structured JSON output. [Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) is the default. The key is read **only by Express**. Never add a `VITE_` API key, paste it into the editor, or commit `.env`. Real mode fails at startup if the selected provider's key is absent; it never silently substitutes demo output.
 
-The server uses `responses.parse`, `zodTextFormat`, `store: false`, a 30-second timeout, and no automatic retries. It handles refusals, incomplete output, bad response shapes, connection failures, and usage limits. API usage requires API billing; a ChatGPT subscription is separate. See [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs) and the [configured model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
+The server calls Gemini's `generateContent` REST API with JSON Schema generated from the shared Zod contracts, validates the returned JSON, and enforces a 30-second timeout. It handles safety blocks, incomplete output, bad response shapes, connection failures, key/model errors, and quota limits. The key travels in a server-side header, never in a URL. See [Google's generation API reference](https://ai.google.dev/api/generate-content) and [structured output guide](https://ai.google.dev/gemini-api/docs/structured-output). API access and quota depend on your Google account and selected model.
+
+OpenAI remains available: set `AI_PROVIDER=openai`, `OPENAI_API_KEY`, and optionally `OPENAI_MODEL` (default `gpt-4.1-mini`). This adapter uses `responses.parse`, `zodTextFormat`, and `store: false`. Neither provider makes automatic retries or switches to another provider on failure.
 
 ## Demo behavior
 
@@ -75,7 +78,7 @@ Successful responses use `{ mode, result, meta }`:
 | `rewrite` | `rewrittenText`, `changes[]` |
 | `actions` | `overview`, `actionItems[{task, assignee, dueDate, priority, evidence}]` |
 
-Metadata contains `provider` (`demo` or `openai`), `inputWords`, `durationMs`, and `requestId`. Errors use `{ "error": { "code", "message", "requestId" } }`. Status codes: 200 success; 400 validation/JSON; 403 origin; 404 route; 413 size; 415 media type; 422 refusal; 429 request/provider limit; 500 internal; 502 upstream or malformed output; 503 provider configuration; 504 timeout. API responses are not cached. Logs omit source text, credentials, and raw provider errors.
+Metadata contains `provider` (`demo`, `gemini`, or `openai`), `inputWords`, `durationMs`, and `requestId`. Errors use `{ "error": { "code", "message", "requestId" } }`. Status codes: 200 success; 400 validation/JSON; 403 origin; 404 route; 413 size; 415 media type; 422 refusal; 429 request/provider limit; 500 internal; 502 upstream or malformed output; 503 provider configuration; 504 timeout. API responses are not cached. Logs omit source text, credentials, and raw provider errors.
 
 ## Verify
 
@@ -83,7 +86,7 @@ Metadata contains `provider` (`demo` or `openai`), `inputWords`, `durationMs`, a
 npm run check
 ```
 
-This runs API/service tests and builds the frontend. The real SDK is tested with a mocked Responses HTTP transport; it does not make paid API calls.
+This runs API/service tests and builds the frontend. Gemini's HTTP requests/responses and the OpenAI SDK transport are mocked in tests; tests do not make paid API calls.
 
 For browser checks, install Python 3.10+ and Playwright, start the app in another terminal, then run:
 
@@ -101,11 +104,11 @@ The suite covers the three tools, settings, loading, validation, copy, tasks, er
 client/src/       React screen, components, styles, API client
 shared/          Zod request/output contracts and sample text
 server/app.js    Express middleware, endpoint, static serving
-server/services/ Separate OpenAI and local demo engines
+server/services/ Provider selection, Gemini, OpenAI, and local demo engines
 server/prompts/  Per-tool instructions
-tests/           API, SDK transport, and browser integration checks
+tests/           API, provider transport, and browser integration checks
 ```
 
-No text is persisted by Promptly. In real mode, source text is sent to OpenAI; `store: false` does not make claims about all provider retention policies. Canceling discards the browser request and prevents stale output; it does not guarantee that an upstream generation or its billing stops.
+No text is persisted by Promptly. In real mode, source text is sent to the selected provider (Google for Gemini, or OpenAI); provider retention policies still apply. Canceling discards the browser request and prevents stale output; it does not guarantee that an upstream generation or its billing stops.
 
 If a port is occupied, stop the earlier app process. If the browser cannot reach the API, confirm both dev processes are running and use the exact URL above. A provider limit error can indicate API billing or quota, not only request frequency.

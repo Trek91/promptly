@@ -134,8 +134,14 @@ test('invalid processor output is rejected at the response boundary', async () =
 test('configuration defaults to demo and fails clearly for invalid real mode', () => {
   assert.equal(readConfig({}).demo, true);
   assert.equal(readConfig({ OPENAI_API_KEY: 'unused' }).demo, true);
-  assert.throws(() => readConfig({ DEMO_MODE: 'false' }), /OPENAI_API_KEY is required/u);
+  assert.equal(readConfig({}).provider, 'gemini');
+  assert.throws(() => readConfig({ DEMO_MODE: 'false' }), /GEMINI_API_KEY is required/u);
+  assert.throws(() => readConfig({ DEMO_MODE: 'false', AI_PROVIDER: 'openai' }), /OPENAI_API_KEY is required/u);
+  assert.throws(() => readConfig({ AI_PROVIDER: 'unknown' }), /AI_PROVIDER/u);
   assert.throws(() => readConfig({ DEMO_MODE: 'yes' }), /DEMO_MODE/u);
   assert.throws(() => readConfig({ PORT: '0' }), /PORT/u);
-  assert.equal(readConfig({ DEMO_MODE: 'false', OPENAI_API_KEY: 'test' }).demo, false);
+  assert.equal(readConfig({ DEMO_MODE: 'false', GEMINI_API_KEY: 'test' }).demo, false);
+  assert.equal(readConfig({ DEMO_MODE: 'false', AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test' }).demo, false);
+  assert.equal(readConfig({ GEMINI_API_KEY: ' gemini ', OPENAI_API_KEY: 'openai' }).apiKey, 'gemini');
+  assert.equal(readConfig({ AI_PROVIDER: 'openai', GEMINI_API_KEY: 'gemini', OPENAI_API_KEY: ' openai ' }).apiKey, 'openai');
 });

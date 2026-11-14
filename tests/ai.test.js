@@ -6,7 +6,7 @@ import { readConfig } from '../server/config.js';
 import { outputSchemas } from '../shared/schemas.js';
 import { zodTextFormat } from 'openai/helpers/zod';
 
-const config = readConfig({ DEMO_MODE: 'false', OPENAI_API_KEY: 'test-key' });
+const config = readConfig({ DEMO_MODE: 'false', AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-key' });
 const input = { mode: 'summarize', text: 'Please summarize this text.', preferences: {} };
 const valid = { summary: 'A summary.', keyPoints: ['A point.'], takeaway: 'A takeaway.' };
 const stub = (response) => ({ responses: { parse: async () => response } });

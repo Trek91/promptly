@@ -44,5 +44,5 @@ export const responseSchema = z.discriminatedUnion('mode', [
   z.object({ mode: z.literal('actions'), result: actionsSchema, meta: metaSchema() }),
 ]);
 function metaSchema() {
-  return z.object({ provider: z.enum(['demo', 'openai']), inputWords: z.number(), durationMs: z.number(), requestId: z.string() });
+  return z.object({ provider: z.enum(['demo', 'gemini', 'openai']), inputWords: z.number(), durationMs: z.number(), requestId: z.string() });
 }

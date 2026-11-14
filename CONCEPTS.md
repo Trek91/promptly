@@ -4,16 +4,16 @@ This repository implements the focused Promptly scope agreed in the referenced d
 
 | Marker | Implementation | How to demonstrate |
 | --- | --- | --- |
-| LLM API integration | `server/services/ai.js` → `createAIService`, `client.responses.parse` | Set real-mode server environment; run any tool. Without a key, inspect the SDK transport test in `tests/ai.test.js`. |
+| LLM API integration | `server/services/ai.js` → `createAIService`; `gemini.js` → native `generateContent` HTTP request; `openai.js` → `client.responses.parse` | Set Gemini's server-side key and real mode; run any tool. Without a key, inspect `tests/gemini.test.js` and the OpenAI SDK tests in `tests/ai.test.js`. |
 | Prompt engineering | `server/prompts/templates.js` → `buildInstructions` | Compare per-tool instructions, tone/length parameters, source-as-data guidance, and rules against invented task metadata. |
-| Structured outputs | `shared/schemas.js`, `server/services/ai.js` → `zodTextFormat` | Inspect strict output schemas, required nullable fields, SDK parsing, and server/browser response validation. |
+| Structured outputs | `shared/schemas.js`; `gemini.js` → `z.toJSONSchema`, `responseJsonSchema`; `openai.js` → `zodTextFormat` | Inspect strict output schemas, required nullable fields, provider JSON parsing, and server/browser response validation. |
 | REST endpoint design | `server/app.js` → `POST /api/process` | Send a mode, source text, and preferences; receive a typed result envelope. One stateless processing resource. |
-| HTTP status codes | `server/app.js`, `server/middleware/errors.js`, `server/services/ai.js` | Test 400, 403, 404, 413, 415, 422, 429, 500, 502, 503, and 504. |
+| HTTP status codes | `server/app.js`, `server/middleware/errors.js`, `server/services/gemini.js`, `server/services/openai.js` | Test 400, 403, 404, 413, 415, 422, 429, 500, 502, 503, and 504. |
 | Middleware | `server/app.js` → request IDs, Helmet, origin checks, CORS, rate limiter, JSON parser; `errorHandler` | Trace a request through validation, the handler, and centralized error output. |
-| Server-side error handling | `server/middleware/errors.js` → `AppError`, `errorHandler`; `server/services/ai.js` | Inspect refusal, timeout, invalid-output and provider-error tests. Raw provider errors are not sent to the browser. |
+| Server-side error handling | `server/middleware/errors.js` → `AppError`, `errorHandler`; both provider adapters | Inspect refusal, timeout, invalid-output and provider-error tests. Raw provider errors are not sent to the browser. |
 | Environment variables / secrets | `.env.example`, `.gitignore`, `server/config.js` → `readConfig` | Start without credentials in demo; see startup reject missing real-mode credentials. No key enters client code. |
 | Async data fetching | `client/src/lib/api.js` → `processText`; `client/src/App.jsx` → `run` | Observe loading and results from Express. Simulate network errors, then retry. |
-| JavaScript async/await | `App.jsx`, `server/app.js`, `server/services/ai.js` | Trace promise completion and exception handling from fetch through the SDK. |
+| JavaScript async/await | `App.jsx`, `server/app.js`, `server/services/gemini.js`, `server/services/openai.js` | Trace promise completion and exception handling from browser fetch through the selected provider. |
 | React component composition | `client/src/components/` + `App.jsx` | Header, tool selector, editor, result panel, reusable Button and Choice compose one screen. |
 | `useState` | `App.jsx`, `ResultPanel.jsx` | Editor text, selected mode, preferences, loading/error/result, clipboard feedback, and checked tasks update the rendered screen. |
 | `useEffect` | `App.jsx` and `ResultPanel.jsx` | Cleanup aborts on unmount; result changes reset copy/task state and focus the result heading; timers are cleaned up. No autosave is needed. |
@@ -26,7 +26,7 @@ This repository implements the focused Promptly scope agreed in the referenced d
 React editor
   → shared request validation → fetch with AbortController
   → Express: origin / size / rate checks → request validation
-  → local demo OR server-side OpenAI Responses + strict Zod format
+  → local demo OR server-side Gemini / OpenAI + Zod-derived JSON Schema
   → output validation → result + provider metadata
   → browser validation → summary / rewritten text / task checklist
 ```
@@ -57,4 +57,4 @@ The delivered folder is initialized as a local Git repository. The downloadable 
 
 ## Verification anchors
 
-`tests/api.test.js` verifies the endpoint and demo behavior. `tests/ai.test.js` uses the installed SDK with a mocked HTTP response, plus provider failure cases. `tests/ui_test.py` exercises the actual running frontend and backend. See `TESTING.md` for the completed run and the paid-call limitation.
+`tests/api.test.js` verifies the endpoint, configuration, and demo behavior. `tests/gemini.test.js` checks the Gemini transport, all mode schemas, timeout, safety/quota errors, and provider metadata. `tests/ai.test.js` uses the installed OpenAI SDK with a mocked HTTP response. `tests/ui_test.py` exercises the actual running frontend and backend. See `TESTING.md` for completed checks and live-call limitations.

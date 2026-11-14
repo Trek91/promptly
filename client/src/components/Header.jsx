@@ -19,7 +19,7 @@ export default function Header() {
         <li><strong>Rewrite</strong><span>Keep the meaning. Change the tone: professional, casual, concise, or polished.</span></li>
         <li><strong>Extract tasks</strong><span>Find explicit next steps, owners, and deadlines. Missing details stay unspecified.</span></li>
       </ul>
-      <div className="guide-note"><LockKeyhole size={17} /><p>Promptly doesn’t save your text. Demo mode uses local rules and curated samples; real AI sends text to OpenAI. Always review the result.</p></div>
+      <div className="guide-note"><LockKeyhole size={17} /><p>Promptly doesn’t save your text. Demo mode uses local rules and curated samples; real AI sends text to the provider configured on the server (Gemini or OpenAI). Always review the result.</p></div>
     </dialog>
   </>;
 }

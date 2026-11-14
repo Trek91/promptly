@@ -3,6 +3,9 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   DEMO_MODE: z.enum(['true', 'false']).default('true'),
+  AI_PROVIDER: z.enum(['gemini', 'openai']).default('gemini'),
+  GEMINI_API_KEY: z.string().default(''),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.8-flash'),
   OPENAI_API_KEY: z.string().default(''),
   OPENAI_MODEL: z.string().min(1).default('gpt-4.1-mini'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
@@ -19,12 +22,13 @@ export function readConfig(env = process.env) {
     throw new Error(`Invalid environment settings: ${parsed.error.issues.map((i) => i.path.join('.')).join(', ')}`);
   }
   const e = parsed.data;
-  if (e.DEMO_MODE === 'false' && !e.OPENAI_API_KEY.trim()) {
-    throw new Error('OPENAI_API_KEY is required when DEMO_MODE=false. Use DEMO_MODE=true to run without credentials.');
+  const keyName = e.AI_PROVIDER === 'gemini' ? 'GEMINI_API_KEY' : 'OPENAI_API_KEY';
+  if (e.DEMO_MODE === 'false' && !e[keyName].trim()) {
+    throw new Error(`${keyName} is required when DEMO_MODE=false and AI_PROVIDER=${e.AI_PROVIDER}. Use DEMO_MODE=true to run without credentials.`);
   }
   return {
-    demo: e.DEMO_MODE === 'true', apiKey: e.OPENAI_API_KEY.trim(),
-    model: e.OPENAI_MODEL, port: e.PORT, host: e.HOST,
+    demo: e.DEMO_MODE === 'true', provider: e.AI_PROVIDER, apiKey: e[keyName].trim(),
+    model: e.AI_PROVIDER === 'gemini' ? e.GEMINI_MODEL : e.OPENAI_MODEL, port: e.PORT, host: e.HOST,
     clientOrigin: new URL(e.CLIENT_ORIGIN).origin, timeoutMs: e.AI_TIMEOUT_MS,
     trustProxyHops: e.TRUST_PROXY_HOPS,
   };

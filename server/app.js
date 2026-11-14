@@ -48,7 +48,7 @@ export function createApp(config, { processor, limit = 30 } = {}) {
     const result = outputSchemas[input.mode].safeParse(await processText(input));
     if (!result.success) throw new AppError(502, 'AI_INVALID_OUTPUT', 'The service returned an unexpected format. Please try again.');
     res.json({ mode: input.mode, result: result.data, meta: {
-      provider: config.demo ? 'demo' : 'openai', inputWords: countWords(input.text),
+      provider: config.demo ? 'demo' : config.provider, inputWords: countWords(input.text),
       durationMs: Math.round(performance.now() - started), requestId: req.requestId,
     } });
   });
