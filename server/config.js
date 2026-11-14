@@ -5,7 +5,7 @@ const envSchema = z.object({
   DEMO_MODE: z.enum(['true', 'false']).default('true'),
   AI_PROVIDER: z.enum(['gemini', 'openai']).default('gemini'),
   GEMINI_API_KEY: z.string().default(''),
-  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.8-flash'),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.5-flash-lite'),
   OPENAI_API_KEY: z.string().default(''),
   OPENAI_MODEL: z.string().min(1).default('gpt-4.1-mini'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),

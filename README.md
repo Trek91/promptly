@@ -29,10 +29,10 @@ Edit these settings, then restart the server:
 DEMO_MODE=false
 AI_PROVIDER=gemini
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
-Stop `npm run dev` with Ctrl+C and run it again after editing `.env`. A successful real request displays **Gemini result**, rather than **Demo result**. The model is configurable; choose a Gemini model your API account can access that supports structured JSON output. [Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) is the default. The key is read **only by Express**. Never add a `VITE_` API key, paste it into the editor, or commit `.env`. Real mode fails at startup if the selected provider's key is absent; it never silently substitutes demo output.
+Stop `npm run dev` with Ctrl+C and run it again after editing `.env`. A successful real request displays **Gemini result**, rather than **Demo result**. The model is configurable; choose a Gemini model your API account can access that supports structured JSON output. [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) is the default. The key is read **only by Express**. Never add a `VITE_` API key, paste it into the editor, or commit `.env`. Real mode fails at startup if the selected provider's key is absent; it never silently substitutes demo output.
 
 The server calls Gemini's `generateContent` REST API with JSON Schema generated from the shared Zod contracts, validates the returned JSON, and enforces a 30-second timeout. It handles safety blocks, incomplete output, bad response shapes, connection failures, key/model errors, and quota limits. The key travels in a server-side header, never in a URL. See [Google's generation API reference](https://ai.google.dev/api/generate-content) and [structured output guide](https://ai.google.dev/gemini-api/docs/structured-output). API access and quota depend on your Google account and selected model.
 
