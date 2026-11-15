@@ -33,3 +33,13 @@ Two inspector warnings are intentional. The 48px serif greeting is the chosen di
 The final internal critique rates design 8, usability 8.5, creativity 7.5, and content 8, for a weighted **8.1/10**. This is a design review, not an external award or a price valuation. The result remains a familiar document editor; its distinctive craft comes from the typography, document spread, and source-review workflow.
 
 Previews use explicitly labeled local demo inputs/results. No stock photography is needed for this app screen. The API, source validation, and active Gemini 3.5 Flash-Lite configuration are unchanged. See TESTING.md for completed checks.
+
+## Review and history — 15 November 2026
+
+The editor keeps its existing typography, palette, geometry, and one-screen layout. New result controls are secondary, inside the output document, and only appear after generation. Editing uses labeled fields and an explicit Done editing control. A quiet Edited by you label distinguishes local edits from the retained generated version. Reset edits is shown only when it can do something. The AI/demo change explanation remains explicitly attributed to that engine.
+
+Rewrite comparison uses green underline and red strike-through, plus a written legend, so color is not the only signal. This compares exact text; large changed passages are grouped rather than blocking the main thread with an unbounded matrix. Task source quotes remain read-only and continue to locate the original evidence.
+
+Past tasks lives behind one header action. A native right-side modal drawer carries real result titles, dates, tool labels, edit status, and calculated checklist completion. The list scrolls independently; the privacy explanation and clear action remain accessible. The phone gets a full-width sheet with native focus containment and Escape dismissal. Individual deletion and confirmed clear-all change local history without clearing the current output or recreating a deleted record.
+
+The footer and guide now accurately disclose browser-local saving. No new route, API endpoint, account, database, or provider dependency was added.

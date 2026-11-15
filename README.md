@@ -1,6 +1,6 @@
 # Promptly v1.0
 
-A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and Gemini (with optional OpenAI Responses support). One screen, one processing endpoint. No database, accounts, payments, or browser storage.
+A focused text workspace: **summarize**, **rewrite**, and **extract tasks**. React + Vite, Tailwind CSS, custom shadcn-inspired controls, Express, Zod, and Gemini (with optional OpenAI Responses support). One screen, one processing endpoint. No database, accounts, or payments. Past tasks are stored locally in this browser.
 
 The writing-room interface pairs locally bundled Instrument Sans and Instrument Serif with a centered document spread. Focus view expands the editing area; clipboard paste and plain-text download are built in. On phones, switch between Original and Result. Task source quotes can be located and highlighted in the original. See [DESIGN.md](DESIGN.md) for design decisions and review evidence.
 
@@ -15,7 +15,16 @@ npm run dev
 
 Open **http://127.0.0.1:5173**. Express runs on port 3001; Vite proxies `/api` to it. Both start together. Stop them with Ctrl+C. No `.env` or API key is needed for the default demo.
 
-Choose a tool → **Try a sample** → run the tool. Ctrl+Enter (or Cmd+Enter) also submits from the editor. Results can be copied or downloaded as text; tasks can be checked off for the current session. Use Focus view to hide the workspace heading and gain reading space.
+Choose a tool → **Try a sample** → run the tool. Ctrl+Enter (or Cmd+Enter) also submits from the editor. Results can be copied or downloaded as text; tasks can be checked off and completed tasks hidden. Use Focus view to hide the workspace heading and gain reading space.
+
+## Review and pick up later
+
+- **Edit result** opens labeled fields for a summary, rewritten draft, or task list. Changes apply immediately to the displayed result, copy, and download. **Reset edits** restores the generated version. Original source text and task evidence are kept intact.
+- **Show changes** on a rewrite compares the original source with the current draft. Added text is underlined; removed text is struck through. Very large changes are grouped into passages to keep comparison responsive.
+- Task completion totals are calculated from the checklist. **Hide completed** filters the view; copying or downloading still includes the entire checklist and its completion status.
+- **Past tasks** opens a drawer with the latest 20 successful results across all three tools. It retains exact source text, tool preferences, the generated version, edits, and completion. Filter by tool, reopen without another AI call, delete one result, or clear all with confirmation.
+
+History uses `localStorage` on the same browser and site address. It is not encrypted, shared between devices, or saved on the server. Successful results are saved automatically; unfinished source-only drafts and failed requests are not saved. Older results are removed as newer ones arrive, within a bounded storage budget. Clearing browser data removes history. Avoid shared browsers for private text, or delete the results after use. If storage is blocked/full, the workspace and session history still work and show a notice. Reloading then loses unsaved session changes. Running AI again uses the original source, not the edited output.
 
 ## Enable Gemini
 
@@ -103,7 +112,7 @@ The suite covers the three tools, settings, loading, validation, copy, tasks, er
 ## Where things live
 
 ```text
-client/src/       React screen, components, styles, API client
+client/src/       React screen, review/history components, state reducer, comparison, storage, API client
 shared/          Zod request/output contracts and sample text
 server/app.js    Express middleware, endpoint, static serving
 server/services/ Provider selection, Gemini, OpenAI, and local demo engines
